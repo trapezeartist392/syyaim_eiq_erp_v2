@@ -94,7 +94,7 @@ async def signup(
 
     # Create Stripe customer
     checkout_url = None
-    if settings.STRIPE_SECRET_KEY:
+    if settings.RAZORPAY_KEY_ID:
         try:
             customer_id = await BillingService.create_customer(tenant)
             tenant.stripe_customer_id = customer_id
