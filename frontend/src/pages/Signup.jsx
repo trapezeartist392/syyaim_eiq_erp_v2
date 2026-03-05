@@ -75,6 +75,10 @@ export default function SignupPage() {
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || "Signup failed");
       setSuccess(d);
+      // Redirect to tenant subdomain after short delay
+      setTimeout(() => {
+        window.location.href = `https://${form.slug}.${BASE_DOMAIN}/login`;
+      }, 3000);
     } catch (err) {
       setError(err.message);
     } finally {
