@@ -36,14 +36,15 @@ class BillingService:
             r = await client.post(
                 f"{RAZORPAY_API}/customers",
                 auth=_auth(),
-                json={
+                json={k: v for k, v in {
                     "name": tenant.name,
                     "email": tenant.email,
+                    "contact": tenant.phone if tenant.phone else None,
                     "notes": {
                         "tenant_slug": tenant.slug,
                         "tenant_id": str(tenant.id),
                     },
-                },
+                }.items() if v is not None},
             )
             r.raise_for_status()
             return r.json()["id"]
