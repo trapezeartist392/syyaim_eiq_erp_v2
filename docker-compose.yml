@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-syyaimeiq}
       POSTGRES_USER: ${POSTGRES_USER:-miq_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-syyaiment392}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-miq_user}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-syyaimeiq}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-miq_user}:${POSTGRES_PASSWORD:-syyaiment392}@postgres:5432/${POSTGRES_DB:-syyaimeiq}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
