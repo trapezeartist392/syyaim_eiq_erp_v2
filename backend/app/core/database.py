@@ -61,7 +61,7 @@ def get_tenant_db(tenant_slug: str):
             try:
                 # Set schema search path for this session
                 await session.execute(
-                    text(f"SET search_path TO {tenant_slug}, public")
+                    text(f'SET search_path TO "{tenant_slug}", public')
                 )
                 yield session
                 await session.commit()
