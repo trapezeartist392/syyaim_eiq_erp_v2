@@ -5,7 +5,7 @@ import api from '../utils/api'
 import { Factory, Eye, EyeOff } from 'lucide-react'
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@syyaimeiq.com')
+  const [email, setEmail] = useState()
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -44,7 +44,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label">Email address</label>
-              <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+              <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Enter email" />
             </div>
             <div>
               <label className="label">Password</label>
@@ -62,7 +62,7 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
-          <p className="text-xs text-slate-400 text-center mt-6">Default: admin@syyaimeiq.com / admin1234</p>
+          {/* <p className="text-xs text-slate-400 text-center mt-6">Default: admin@syyaimeiq.com / admin1234</p> */}
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500">
               Don't have an account?{" "}
