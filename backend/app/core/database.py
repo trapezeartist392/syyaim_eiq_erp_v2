@@ -103,7 +103,7 @@ async def drop_tenant_schema(slug: str) -> None:
 async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
     """Create all ERP tables in the tenant schema."""
 
-    # Enums must be created in each schema separately
+    # Enums — each in its own execute call
     enums = [
         ("userrole", ['super_admin','admin','manager','accountant','hr_manager',
                       'purchase_manager','sales_manager','warehouse_manager','viewer']),
@@ -118,19 +118,17 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
     ]
 
     for name, values in enums:
-        vals = ", ".join(f"'{v}'" for v in values)
+        vals = ", ".join(f"\'{v}\'" for v in values)
         await session.execute(text(f"""
             DO $$ BEGIN
-                CREATE TYPE "{slug}".{name} AS ENUM ({vals});
+                CREATE TYPE \"{slug}\".{name} AS ENUM ({vals});
             EXCEPTION WHEN duplicate_object THEN NULL;
             END $$;
         """))
 
-    # All ERP tables
-    ddl = f"""
-        SET search_path TO "{slug}", public;
-
-        CREATE TABLE IF NOT EXISTS users (
+    # Each CREATE TABLE as a separate execute call
+    tables = [
+        f"""CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
             full_name VARCHAR(255) NOT NULL,
@@ -141,9 +139,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             is_active BOOLEAN DEFAULT true,
             created_at TIMESTAMPTZ DEFAULT now(),
             updated_at TIMESTAMPTZ
-        );
-
-        CREATE TABLE IF NOT EXISTS leads (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS leads (
             id SERIAL PRIMARY KEY,
             company_name VARCHAR(255) NOT NULL,
             contact_name VARCHAR(255),
@@ -157,9 +154,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             assigned_to INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now(),
             updated_at TIMESTAMPTZ
-        );
-
-        CREATE TABLE IF NOT EXISTS sales_orders (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS sales_orders (
             id SERIAL PRIMARY KEY,
             order_number VARCHAR(50) UNIQUE,
             customer_name VARCHAR(255) NOT NULL,
@@ -170,9 +166,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             created_by INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now(),
             updated_at TIMESTAMPTZ
-        );
-
-        CREATE TABLE IF NOT EXISTS vendors (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS vendors (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             code VARCHAR(50) UNIQUE,
@@ -184,9 +179,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             rating FLOAT DEFAULT 0,
             is_active BOOLEAN DEFAULT true,
             created_at TIMESTAMPTZ DEFAULT now()
-        );
-
-        CREATE TABLE IF NOT EXISTS purchase_requisitions (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS purchase_requisitions (
             id SERIAL PRIMARY KEY,
             pr_number VARCHAR(50) UNIQUE,
             item_description TEXT NOT NULL,
@@ -201,9 +195,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             approved_by INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now(),
             updated_at TIMESTAMPTZ
-        );
-
-        CREATE TABLE IF NOT EXISTS purchase_orders (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS purchase_orders (
             id SERIAL PRIMARY KEY,
             po_number VARCHAR(50) UNIQUE,
             vendor_id INTEGER REFERENCES vendors(id) NOT NULL,
@@ -217,9 +210,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             created_by INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now(),
             updated_at TIMESTAMPTZ
-        );
-
-        CREATE TABLE IF NOT EXISTS items (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
             code VARCHAR(50) UNIQUE,
             name VARCHAR(255) NOT NULL,
@@ -234,9 +226,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             ai_forecast_qty FLOAT,
             created_at TIMESTAMPTZ DEFAULT now(),
             updated_at TIMESTAMPTZ
-        );
-
-        CREATE TABLE IF NOT EXISTS stock_movements (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS stock_movements (
             id SERIAL PRIMARY KEY,
             item_id INTEGER REFERENCES items(id) NOT NULL,
             movement_type VARCHAR(20),
@@ -245,9 +236,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             notes TEXT,
             created_by INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now()
-        );
-
-        CREATE TABLE IF NOT EXISTS employees (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS employees (
             id SERIAL PRIMARY KEY,
             employee_id VARCHAR(50) UNIQUE,
             full_name VARCHAR(255) NOT NULL,
@@ -269,9 +259,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             esi_applicable BOOLEAN DEFAULT false,
             is_active BOOLEAN DEFAULT true,
             created_at TIMESTAMPTZ DEFAULT now()
-        );
-
-        CREATE TABLE IF NOT EXISTS payrolls (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS payrolls (
             id SERIAL PRIMARY KEY,
             employee_id INTEGER REFERENCES employees(id) NOT NULL,
             month INTEGER,
@@ -292,9 +281,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             processed_at TIMESTAMPTZ,
             ai_anomaly_flag BOOLEAN DEFAULT false,
             ai_anomaly_notes TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS accounts (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS accounts (
             id SERIAL PRIMARY KEY,
             code VARCHAR(20) UNIQUE,
             name VARCHAR(255) NOT NULL,
@@ -302,9 +290,8 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             parent_id INTEGER REFERENCES accounts(id),
             balance FLOAT DEFAULT 0,
             is_active BOOLEAN DEFAULT true
-        );
-
-        CREATE TABLE IF NOT EXISTS journal_entries (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS journal_entries (
             id SERIAL PRIMARY KEY,
             entry_number VARCHAR(50) UNIQUE,
             date DATE NOT NULL,
@@ -316,18 +303,16 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             ai_generated BOOLEAN DEFAULT false,
             created_by INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now()
-        );
-
-        CREATE TABLE IF NOT EXISTS journal_lines (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS journal_lines (
             id SERIAL PRIMARY KEY,
             entry_id INTEGER REFERENCES journal_entries(id) NOT NULL,
             account_id INTEGER REFERENCES accounts(id) NOT NULL,
             transaction_type transactiontype,
             amount FLOAT NOT NULL,
             narration TEXT
-        );
-
-        CREATE TABLE IF NOT EXISTS agent_logs (
+        )""",
+        f"""CREATE TABLE IF NOT EXISTS agent_logs (
             id SERIAL PRIMARY KEY,
             agent_name VARCHAR(100) NOT NULL,
             action VARCHAR(255) NOT NULL,
@@ -342,6 +327,9 @@ async def _create_tenant_tables(session: AsyncSession, slug: str) -> None:
             error_message TEXT,
             triggered_by INTEGER REFERENCES users(id),
             created_at TIMESTAMPTZ DEFAULT now()
-        );
-    """
-    await session.execute(text(ddl))
+        )""",
+    ]
+
+    for table_ddl in tables:
+        await session.execute(text(table_ddl))
+
