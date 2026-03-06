@@ -1,8 +1,7 @@
 import { useState } from "react";
 
 const BASE_DOMAIN = import.meta.env.VITE_BASE_DOMAIN || "syyaimeiq.com";
-const API_BASE =
-  import.meta.env.VITE_PUBLIC_API || `https://api.${BASE_DOMAIN}`;
+const API_BASE = import.meta.env.VITE_PUBLIC_API || `https://api.${BASE_DOMAIN}`;
 
 function slugify(text) {
   return text
@@ -24,6 +23,7 @@ export default function SignupPage() {
     phone: "",
   });
   const [slugManual, setSlugManual] = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const [slugStatus, setSlugStatus] = useState(null); // null | "checking" | "available" | "taken"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -49,17 +49,12 @@ export default function SignupPage() {
 
   let slugTimer;
   const checkSlug = (slug) => {
-    if (!slug || slug.length < 3) {
-      setSlugStatus(null);
-      return;
-    }
+    if (!slug || slug.length < 3) { setSlugStatus(null); return; }
     clearTimeout(slugTimer);
     setSlugStatus("checking");
     slugTimer = setTimeout(async () => {
       try {
-        const r = await fetch(
-          `${API_BASE}/api/v1/public/check-slug?slug=${slug}`,
-        );
+        const r = await fetch(`${API_BASE}/api/v1/public/check-slug?slug=${slug}`);
         const d = await r.json();
         setSlugStatus(d.available ? "available" : "taken");
       } catch {
@@ -97,9 +92,7 @@ export default function SignupPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-lg w-full text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            You're all set!
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">You're all set!</h2>
           <p className="text-gray-500 mb-6">
             Your ERP is being provisioned. It'll be ready in about 30 seconds.
           </p>
@@ -115,8 +108,7 @@ export default function SignupPage() {
           {success.checkout_url ? (
             <div>
               <p className="text-sm text-gray-600 mb-4">
-                Your 14-day free trial is active. Subscribe now to lock in your
-                price.
+                Your 14-day free trial is active. Subscribe now to lock in your price.
               </p>
               <a
                 href={success.checkout_url}
@@ -146,15 +138,11 @@ export default function SignupPage() {
         {/* Left — value prop */}
         <div className="text-white">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center text-blue-900 font-black text-xl">
-              M
-            </div>
+            <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center text-blue-900 font-black text-xl">M</div>
             <span className="text-2xl font-bold">Syyaim EIQ ERP</span>
           </div>
           <h1 className="text-4xl font-black mb-4 leading-tight">
-            AI-powered ERP
-            <br />
-            for Indian manufacturers
+            AI-powered ERP<br />for Indian manufacturers
           </h1>
           <p className="text-blue-200 text-lg mb-8">
             Live in 60 seconds. No IT team needed.
@@ -178,23 +166,15 @@ export default function SignupPage() {
           </div>
           <div className="mt-8 bg-white/10 rounded-xl p-4">
             <p className="font-bold text-lg">₹12,999 / month</p>
-            <p className="text-blue-300 text-sm">
-              All modules · 25 users · 2,500 AI actions
-            </p>
-            <p className="text-yellow-300 text-sm font-semibold mt-1">
-              14 days free trial — no credit card
-            </p>
+            <p className="text-blue-300 text-sm">All modules · 25 users · 2,500 AI actions</p>
+            <p className="text-yellow-300 text-sm font-semibold mt-1">14 days free trial — no credit card</p>
           </div>
         </div>
 
         {/* Right — signup form */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">
-            Start your free trial
-          </h2>
-          <p className="text-gray-400 text-sm mb-6">
-            14 days free. Cancel anytime.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Start your free trial</h2>
+          <p className="text-gray-400 text-sm mb-6">14 days free. Cancel anytime.</p>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">
@@ -204,9 +184,7 @@ export default function SignupPage() {
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
               <input
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                 value={form.company_name}
@@ -217,9 +195,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Your ERP Subdomain
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Your ERP Subdomain</label>
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
                 <input
                   className="flex-1 px-3 py-2 outline-none"
@@ -233,28 +209,20 @@ export default function SignupPage() {
                 </span>
               </div>
               {form.slug.length >= 3 && (
-                <p
-                  className={`text-xs mt-1 ${
-                    slugStatus === "available"
-                      ? "text-green-600"
-                      : slugStatus === "taken"
-                        ? "text-red-500"
-                        : "text-gray-400"
-                  }`}
-                >
+                <p className={`text-xs mt-1 ${
+                  slugStatus === "available" ? "text-green-600" :
+                  slugStatus === "taken" ? "text-red-500" :
+                  "text-gray-400"
+                }`}>
                   {slugStatus === "checking" && "Checking…"}
-                  {slugStatus === "available" &&
-                    `✓ ${form.slug}.${BASE_DOMAIN} is available`}
-                  {slugStatus === "taken" &&
-                    `✗ Already taken — try another name`}
+                  {slugStatus === "available" && `✓ ${form.slug}.${BASE_DOMAIN} is available`}
+                  {slugStatus === "taken" && `✗ Already taken — try another name`}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Your Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
               <input
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                 value={form.admin_name}
@@ -265,9 +233,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Work Email
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Work Email</label>
               <input
                 type="email"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -279,23 +245,28 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                value={form.password}
-                onChange={update("password")}
-                placeholder="Min. 8 characters"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPass ? "text" : "password"}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={form.password}
+                  onChange={update("password")}
+                  placeholder="Min. 8 characters"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
+                >
+                  {showPass ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone (optional)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
               <input
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                 value={form.phone}
@@ -313,20 +284,15 @@ export default function SignupPage() {
             </button>
 
             <p className="text-center text-xs text-gray-400">
-              By signing up you agree to our Terms of Service and Privacy
-              Policy. No credit card required for trial.
+              By signing up you agree to our Terms of Service and Privacy Policy.
+              No credit card required for trial.
             </p>
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <p className="text-sm text-gray-500">
               Already have an account?{" "}
-              <a
-                href="/login"
-                className="text-blue-700 font-medium hover:underline"
-              >
-                Sign in
-              </a>
+              <a href="/login" className="text-blue-700 font-medium hover:underline">Sign in</a>
             </p>
           </div>
         </div>
