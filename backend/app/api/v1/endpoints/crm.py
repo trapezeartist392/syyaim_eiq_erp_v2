@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel
 from typing import Optional
-from app.core.database import get_db
+from app.core.deps import get_tenant_session
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.crm import Lead, LeadStatus, SalesOrder
@@ -18,6 +18,23 @@ class LeadCreate(BaseModel):
     phone: Optional[str] = None
     source: Optional[str] = None
     value: float = 0
+    gstin: Optional[str] = None
+    item_name: Optional[str] = None
+    item_code: Optional[str] = None
+    item_category: Optional[str] = None
+
+class LeadUpdate(BaseModel):
+    company_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    source: Optional[str] = None
+    value: Optional[float] = None
+    status: Optional[LeadStatus] = None
+    gstin: Optional[str] = None
+    item_name: Optional[str] = None
+    item_code: Optional[str] = None
+    item_category: Optional[str] = None
 
 class SalesOrderCreate(BaseModel):
     customer_name: str
@@ -26,16 +43,16 @@ class SalesOrderCreate(BaseModel):
     lead_id: Optional[int] = None
 
 @router.get("/leads")
-async def list_leads(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def list_leads(db: AsyncSession = Depends(get_tenant_session), current_user: User = Depends(get_current_user)):
     result = await db.execute(select(Lead).order_by(Lead.created_at.desc()).limit(100))
     leads = result.scalars().all()
     return [{"id": l.id, "company_name": l.company_name, "contact_name": l.contact_name,
-             "email": l.email, "status": l.status.value if l.status else None, "value": l.value,
+             "email": l.email, "status": l.status.value if l.status else None, "value": l.value, "gstin": l.gstin, "item_name": l.item_name, "item_code": l.item_code, "item_category": l.item_category,
              "ai_score": l.ai_score, "ai_notes": l.ai_notes,
              "created_at": l.created_at} for l in leads]
 
 @router.post("/leads", status_code=201)
-async def create_lead(data: LeadCreate, db: AsyncSession = Depends(get_db),
+async def create_lead(data: LeadCreate, db: AsyncSession = Depends(get_tenant_session),
                       current_user: User = Depends(get_current_user)):
     lead = Lead(**data.model_dump(), assigned_to=current_user.id)
     db.add(lead)
@@ -54,7 +71,7 @@ async def create_lead(data: LeadCreate, db: AsyncSession = Depends(get_db),
 
 @router.patch("/leads/{lead_id}/status")
 async def update_lead_status(lead_id: int, status: LeadStatus,
-                              db: AsyncSession = Depends(get_db),
+                              db: AsyncSession = Depends(get_tenant_session),
                               current_user: User = Depends(get_current_user)):
     result = await db.execute(select(Lead).where(Lead.id == lead_id))
     lead = result.scalar_one_or_none()
@@ -64,8 +81,21 @@ async def update_lead_status(lead_id: int, status: LeadStatus,
     await db.commit()
     return {"id": lead.id, "status": lead.status.value}
 
+@router.put("/leads/{lead_id}")
+async def update_lead(lead_id: int, data: LeadUpdate, db: AsyncSession = Depends(get_tenant_session),
+                      current_user: User = Depends(get_current_user)):
+    result = await db.execute(select(Lead).where(Lead.id == lead_id))
+    lead = result.scalar_one_or_none()
+    if not lead:
+        raise HTTPException(404, "Lead not found")
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(lead, field, value)
+    await db.commit()
+    await db.refresh(lead)
+    return {"id": lead.id, "company_name": lead.company_name, "status": lead.status.value if lead.status else None}
+
 @router.get("/stats")
-async def crm_stats(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def crm_stats(db: AsyncSession = Depends(get_tenant_session), current_user: User = Depends(get_current_user)):
     total = await db.scalar(select(func.count(Lead.id)))
     won = await db.scalar(select(func.count(Lead.id)).where(Lead.status == LeadStatus.WON))
     pipeline_value = await db.scalar(select(func.sum(Lead.value)).where(Lead.status.notin_([LeadStatus.WON, LeadStatus.LOST])))

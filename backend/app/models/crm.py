@@ -24,6 +24,10 @@ class Lead(Base):
     value = Column(Float, default=0)
     ai_score = Column(Integer, default=0)  # AI-generated score 0-100
     ai_notes = Column(Text)
+    gstin = Column(String(15))
+    item_name = Column(String(255))
+    item_code = Column(String(50))
+    item_category = Column(String(50))
     assigned_to = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
