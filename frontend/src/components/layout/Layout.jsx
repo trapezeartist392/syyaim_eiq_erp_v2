@@ -1,17 +1,18 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../store/auth'
-import { LayoutDashboard, Users, ShoppingCart, Package, UserCog, DollarSign, Bot, LogOut, Cpu } from 'lucide-react'
+import { LayoutDashboard, Users, ShoppingCart, Package, UserCog, DollarSign, Bot, ClipboardCheck, LogOut, Cpu } from 'lucide-react'
 import TrialBanner from '../TrialBanner'
 import clsx from 'clsx'
 
 const nav = [
-  { to: '/',        icon: LayoutDashboard, label: 'Dashboard',   end: true },
-  { to: '/crm',     icon: Users,           label: 'CRM & Sales' },
-  { to: '/purchase',icon: ShoppingCart,    label: 'Purchase' },
-  { to: '/material',icon: Package,         label: 'Material' },
-  { to: '/hr',      icon: UserCog,         label: 'HR & Payroll' },
-  { to: '/finance', icon: DollarSign,      label: 'Finance' },
-  { to: '/agents',  icon: Bot,             label: 'AI Agents' },
+  { to: '/',          icon: LayoutDashboard, label: 'Dashboard',   end: true },
+  { to: '/crm',       icon: Users,           label: 'CRM & Sales' },
+  { to: '/purchase',  icon: ShoppingCart,    label: 'Purchase' },
+  { to: '/material',  icon: Package,         label: 'Material' },
+  { to: '/hr',        icon: UserCog,         label: 'HR & Payroll' },
+  { to: '/finance',   icon: DollarSign,      label: 'Finance' },
+  { to: '/agents',    icon: Bot,             label: 'AI Agents' },
+  { to: '/onboarding',icon: ClipboardCheck,  label: 'Onboarding'},
 ]
 
 export default function Layout() {

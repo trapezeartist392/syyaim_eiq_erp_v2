@@ -10,6 +10,7 @@ import Material from './pages/Material'
 import HR from './pages/HR'
 import Finance from './pages/Finance'
 import Agents from './pages/Agents'
+import Onboarding from './pages/Onboarding'
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth()
@@ -26,13 +27,14 @@ export default function App() {
 
         {/* Protected */}
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index         element={<Dashboard />} />
-          <Route path="crm"      element={<CRM />} />
-          <Route path="purchase" element={<Purchase />} />
-          <Route path="material" element={<Material />} />
-          <Route path="hr"       element={<HR />} />
-          <Route path="finance"  element={<Finance />} />
-          <Route path="agents"   element={<Agents />} />
+          <Route index             element={<Dashboard />} />
+          <Route path="crm"        element={<CRM />} />
+          <Route path="purchase"   element={<Purchase />} />
+          <Route path="material"   element={<Material />} />
+          <Route path="hr"         element={<HR />} />
+          <Route path="finance"    element={<Finance />} />
+          <Route path="agents"     element={<Agents />} />
+          <Route path="onboarding" element={<Onboarding />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
